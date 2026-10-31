@@ -1,46 +1,49 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import AITranslate
 @testable import AITranslateLib
 
 struct AITranslateCommandTests {
-  @Test func parsesArguments() throws {
-    let command = try AITranslateCommand.parseAsRoot([
-      "/path/to/Localizable.xcstrings",
-      "-o", "test-api-key",
-      "-v",
-      "-l", "de,es,fr"
-    ])
+    @Test func parsesArguments() throws {
+        let command = try AITranslateCommand.parseAsRoot([
+            "/path/to/Localizable.xcstrings",
+            "-o", "test-api-key",
+            "-v",
+            "--guidance", "Use natural, concise UI language.",
+            "-l", "de,es,fr"
+        ])
 
-    let parsed = try #require(command as? AITranslateCommand)
-    #expect(parsed.verbose == true)
-    #expect(parsed.skipBackup == false)
-    #expect(parsed.force == false)
-    #expect(parsed.languages == ["de", "es", "fr"])
-    #expect(parsed.openAIKey == "test-api-key")
-  }
+        let parsed = try #require(command as? AITranslateCommand)
+        #expect(parsed.verbose == true)
+        #expect(parsed.skipBackup == false)
+        #expect(parsed.force == false)
+        #expect(parsed.languages == ["de", "es", "fr"])
+        #expect(parsed.openAIKey == "test-api-key")
+        #expect(parsed.guidance == "Use natural, concise UI language.")
+    }
 
-  @Test func parsesNoTuiFlag() throws {
-    let command = try AITranslateCommand.parseAsRoot([
-      "/path/to/Localizable.xcstrings",
-      "-o", "test-api-key",
-      "-l", "de",
-      "--no-tui"
-    ])
+    @Test func parsesNoTuiFlag() throws {
+        let command = try AITranslateCommand.parseAsRoot([
+            "/path/to/Localizable.xcstrings",
+            "-o", "test-api-key",
+            "-l", "de",
+            "--no-tui"
+        ])
 
-    let parsed = try #require(command as? AITranslateCommand)
-    #expect(parsed.noTui == true)
-  }
+        let parsed = try #require(command as? AITranslateCommand)
+        #expect(parsed.noTui == true)
+    }
 
-  @Test func mockAPIUsedInTestEnvironment() {
-    let translate = AITranslateLib.AITranslate(
-      inputFile: URL(fileURLWithPath: "/tmp/test.xcstrings"),
-      languages: ["de"],
-      openAIKey: "test",
-      verbose: false,
-      skipBackup: true,
-      force: false
-    )
-    #expect(translate.api is MockAPI)
-  }
+    @Test func mockAPIUsedInTestEnvironment() {
+        let translate = AITranslateLib.AITranslate(
+            inputFile: URL(fileURLWithPath: "/tmp/test.xcstrings"),
+            languages: ["de"],
+            openAIKey: "test",
+            verbose: false,
+            skipBackup: true,
+            force: false
+        )
+        #expect(translate.api is MockAPI)
+    }
 }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -40,7 +41,7 @@ public final class ProgressDisplay: Sendable {
                 let snap = await self.progress.snapshot()
                 self.render(snap)
                 if snap.isFinished { break }
-                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+                try? await Task.sleep(nanoseconds: 100_000_000)  // 100ms
             }
         }
         renderTask.value = task
@@ -56,7 +57,7 @@ public final class ProgressDisplay: Sendable {
         render(snap)
 
         // Brief pause so the user can see the completed state
-        try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+        try? await Task.sleep(nanoseconds: 500_000_000)  // 500ms
 
         // Show cursor + switch back to main screen buffer
         writeStderr("\u{1B}[?25h\u{1B}[?1049l")

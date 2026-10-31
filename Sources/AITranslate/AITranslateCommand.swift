@@ -5,10 +5,11 @@
 //  Created by Paul MacRory on 3/7/24.
 //
 
-import ArgumentParser
-import OpenAI
-import Foundation
 import AITranslateLib
+import ArgumentParser
+import Foundation
+import OpenAI
+
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -17,71 +18,79 @@ import Glibc
 
 @main
 struct AITranslateCommand: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(commandName: "ai-translate")
+    static let configuration = CommandConfiguration(commandName: "ai-translate")
 
-  @Sendable static func gatherLanguages(from input: String) -> [String] {
-    input.split(separator: ",")
-      .map { String($0).trimmingCharacters(in: .whitespaces) }
-  }
+    @Sendable static func gatherLanguages(from input: String) -> [String] {
+        input.split(separator: ",")
+            .map { String($0).trimmingCharacters(in: .whitespaces) }
+    }
 
-  @Argument(transform: URL.init(fileURLWithPath:))
-  var inputFile: URL
+    @Argument(transform: URL.init(fileURLWithPath:))
+    var inputFile: URL
 
-  @Option(
-    name: .shortAndLong,
-    help: ArgumentHelp("A comma separated list of language codes (must match the language codes used by xcstrings)"),
-    transform: AITranslateCommand.gatherLanguages(from:)
-  )
-  var languages: [String]
+    @Option(
+        name: .shortAndLong,
+        help: ArgumentHelp("A comma separated list of language codes (must match the language codes used by xcstrings)"),
+        transform: AITranslateCommand.gatherLanguages(from:)
+    )
+    var languages: [String]
 
-  @Option(
-    name: .shortAndLong,
-    help: ArgumentHelp("Your OpenAI API key, see: https://platform.openai.com/api-keys")
-  )
-  var openAIKey: String
+    @Option(
+        name: .shortAndLong,
+        help: ArgumentHelp("Your OpenAI API key, see: https://platform.openai.com/api-keys")
+    )
+    var openAIKey: String
 
-  @Flag(name: .shortAndLong)
-  var verbose: Bool = false
+    @Option(
+        name: .long,
+        help: ArgumentHelp("Project-wide translation guidance supplied to the model.")
+    )
+    var guidance: String?
 
-  @Flag(
-    name: .shortAndLong,
-    help: ArgumentHelp("By default a backup of the input will be created. When this flag is provided, the backup is skipped.")
-  )
-  var skipBackup: Bool = false
+    @Flag(name: .shortAndLong)
+    var verbose: Bool = false
 
-  @Flag(
-    name: .shortAndLong,
-    help: ArgumentHelp("Forces all strings to be translated, even if an existing translation is present.")
-  )
-  var force: Bool = false
+    @Flag(
+        name: .shortAndLong,
+        help: ArgumentHelp("By default a backup of the input will be created. When this flag is provided, the backup is skipped.")
+    )
+    var skipBackup: Bool = false
 
-  @Flag(
-    name: .long,
-    help: ArgumentHelp("Sort JSON keys to match Xcode's xcstrings ordering.")
-  )
-  var matchXcodeOrdering: Bool = false
+    @Flag(
+        name: .shortAndLong,
+        help: ArgumentHelp("Forces all strings to be translated, even if an existing translation is present.")
+    )
+    var force: Bool = false
 
-  @Flag(
-    name: .long,
-    help: ArgumentHelp("Disable the rich terminal UI and use simple text output instead.")
-  )
-  var noTui: Bool = false
+    @Flag(
+        name: .long,
+        help: ArgumentHelp("Sort JSON keys to match Xcode's xcstrings ordering.")
+    )
+    var matchXcodeOrdering: Bool = false
 
-  mutating func run() async throws {
-    let useRichUI = !noTui && isatty(STDERR_FILENO) != 0
-    let reporter: ProgressReporter = useRichUI
-      ? RichProgressReporter(verbose: verbose)
-      : SimpleProgressReporter()
+    @Flag(
+        name: .long,
+        help: ArgumentHelp("Disable the rich terminal UI and use simple text output instead.")
+    )
+    var noTui: Bool = false
 
-    try await AITranslate(
-      inputFile: inputFile,
-      languages: languages,
-      openAIKey: openAIKey,
-      verbose: verbose,
-      skipBackup: skipBackup,
-      force: force,
-      matchXcodeOrdering: matchXcodeOrdering,
-      reporter: reporter
-    ).run()
-  }
+    mutating func run() async throws {
+        let useRichUI = !noTui && isatty(STDERR_FILENO) != 0
+        let reporter: AITranslateLib.ProgressReporter =
+            useRichUI
+            ? RichProgressReporter(verbose: verbose)
+            : SimpleProgressReporter()
+
+        try await AITranslate(
+            inputFile: inputFile,
+            languages: languages,
+            openAIKey: openAIKey,
+            verbose: verbose,
+            skipBackup: skipBackup,
+            force: force,
+            guidance: guidance,
+            matchXcodeOrdering: matchXcodeOrdering,
+            reporter: reporter
+        ).run()
+    }
 }
